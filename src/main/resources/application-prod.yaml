@@ -1,0 +1,54 @@
+spring:
+  datasource:
+    url: ${db_url}
+    username: ${db_username}
+    password: ${db_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update   # options: none, validate, update, create, create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${client_id}
+            client-secret: ${client-secret}
+            scope:
+              - email
+              - profile
+            redirect-uri: "https://findmyvehicle.onrender.com/login/oauth2/code/google"
+
+  mail:
+    host: smtp.gmail.com
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+secreteJwtString: ${JWT_SECRET}
+
+app:
+  frontend-url: ${frontend-url}
+
+resend:
+  resend-api-key: ${RESEND_API_KEY}
+  resend-from-email: ${RESEND_FROM_EMAIL}
+  resend-from-name: ${RESEND_FROM_NAME}
+
+logging:
+  level:
+    root: INFO
+    com.findmyvehicle: DEBUG
