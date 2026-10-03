@@ -65,31 +65,12 @@ public class MailService {
 
     public void sendEmail(String to, String subject, String body) {
         if (resendApiKey.isBlank() || resendFromEmail.isBlank()) {
-            sendEmail1(to, subject, body);
-            return;
+            try{
+                sendEmail1(to, subject, body);
+            } catch (Exception e) {
+                
+            }
         }
-
-        String dateTime = LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
-                .format(DateTimeFormatter.ofPattern("dd MMMM yyyy, hh:mm a"));
-        String finalBody = body
-                + "\n\n"
-                + "----------------------------------------\n"
-                + "Date & Time: " + dateTime + " IST\n"
-                + "----------------------------------------\n\n"
-                + "Regards,\n"
-                + "FindMyVehicle Team";
-        String htmlBody = finalBody
-                .replace("\n", "<br>");
-        Resend resend = new Resend(resendApiKey);
-        SendEmailRequest request = SendEmailRequest.builder()
-                .from(resendFromEmail)
-                .text(finalBody)
-                .to(to)
-                .subject(subject)
-                //.html(htmlBody)
-                .build();
-
-        SendEmailResponse response = resend.emails().send(request);
     }
 
 
