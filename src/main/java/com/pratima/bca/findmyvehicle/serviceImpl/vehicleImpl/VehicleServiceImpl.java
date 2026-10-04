@@ -68,6 +68,27 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public VehicleDetailsDto getVehicleDetails(String regNumber, Long missingDetailsId) {
+        Vehicle vehicle = vehicleRepository.findByRegNumberIgnoreCase(regNumber.trim())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Vehicle not found for registration number: " + regNumber));
+
+        MissingDetails missingDetails = vehicle.getMissingDetails().stream()
+                .filter(details -> details.getId().equals(missingDetailsId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Missing report not found for registration number: " + regNumber
+                                + " and missing details id: " + missingDetailsId));
+
+        VehicleDetailsDto vehicleDetails = toVehicleDetailsDto(vehicle);
+        vehicleDetails.setMissingDetails(vehicleDetails.getMissingDetails().stream()
+                .filter(details -> details.getId().equals(missingDetails.getId()))
+                .toList());
+        return vehicleDetails;
+    }
+
+    @Override
     @Transactional
     public VehicleDetailsDto markMissingReportAsFound(Long missingDetailsId) {
         MissingDetails missingDetails = missingDetailsRepository.findById(missingDetailsId)

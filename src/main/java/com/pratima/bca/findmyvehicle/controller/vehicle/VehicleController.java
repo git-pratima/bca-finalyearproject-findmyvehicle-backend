@@ -36,6 +36,19 @@ public class VehicleController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/vehicles/{regNo}/missing-details/{missingDetailsId}")
+    public ResponseEntity<Response<VehicleDetailsDto>> getVehicleAndMissingDetails(
+            @PathVariable String regNo,
+            @PathVariable Long missingDetailsId) {
+        Response<VehicleDetailsDto> response = new Response<>();
+        Status status = new Status();
+        status.setStatus(HttpStatus.OK.value());
+        status.setMessage("Vehicle and missing report retrieved.");
+        response.setStatus(status);
+        response.setData(vehicleService.getVehicleDetails(regNo, missingDetailsId));
+        return ResponseEntity.ok(response);
+    }
+
     @PreAuthorize("hasAnyRole('NORMAL', 'ADMIN')")
     @PutMapping("/missing-details/{missingDetailsId}/found")
     public ResponseEntity<Response<VehicleDetailsDto>> markMissingReportAsFound(
