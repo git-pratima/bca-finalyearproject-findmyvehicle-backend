@@ -37,12 +37,11 @@ public class DashboardServiceImpl implements DashboardService {
     @Transactional(readOnly = true)
     public DashboardData getDashboardData() {
         User user = multiFunctionUtility.getCurrentUser();
-        Long userId = user.getId();
         DashboardData.DashboardSummary summary = new DashboardData.DashboardSummary(
-                vehicleRepository.countByReportedBy_Id(userId),
-                vehicleRepository.countReportsByUserAndStatus(userId, VehicleStatus.FOUND),
-                vehicleRepository.countReportsByUserAndStatus(userId, VehicleStatus.MISSING),
-                vehicleRepository.countReportsByUserAndStatus(userId, VehicleStatus.CLOSED));
+                vehicleRepository.count(),
+                vehicleRepository.countVehiclesByMissingDetailsStatus(VehicleStatus.FOUND),
+                vehicleRepository.countVehiclesByMissingDetailsStatus(VehicleStatus.MISSING),
+                vehicleRepository.countVehiclesByMissingDetailsStatus(VehicleStatus.CLOSED));
 
         List<DashboardData.DashboardVehicle> recentVehicles = vehicleRepository
                 .findDistinctByMissingDetails_VehicleStatusOrderByCreatedDateDesc(

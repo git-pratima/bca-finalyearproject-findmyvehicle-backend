@@ -1,5 +1,6 @@
 package com.pratima.bca.findmyvehicle.entity.vehicle;
 
+import com.pratima.bca.findmyvehicle.entity.notification.Notification;
 import com.pratima.bca.findmyvehicle.enums.Country;
 import com.pratima.bca.findmyvehicle.enums.State;
 import com.pratima.bca.findmyvehicle.enums.VehicleStatus;
@@ -11,7 +12,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "tbl_missing_details")
@@ -65,6 +68,10 @@ public class MissingDetails {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;
+
+    @OneToMany(mappedBy = "missingDetails", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Notification> notifications = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name="VEHICLE_STATUS")
