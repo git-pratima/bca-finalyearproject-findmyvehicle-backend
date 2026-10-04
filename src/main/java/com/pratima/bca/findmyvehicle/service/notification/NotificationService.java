@@ -12,5 +12,7 @@ public interface NotificationService {
 
     Page<NotificationDetailsDto> getNotificationsForCurrentUser(int page, int size);
 
+    NotificationDetailsDto updateSeenStatusForCurrentUser(Long notificationId, String seen);
+
     long getUnreadNotificationCountForCurrentUser();
 }

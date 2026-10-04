@@ -95,18 +95,35 @@ public class NotificationServiceImpl implements NotificationService {
         Long currentUserId = multiFunctionUtility.getCurrentUser().getId();
         return notificationRepository.findByVehicleOwner_IdOrderByCreatedDateDesc(
                         currentUserId, PageRequest.of(page, size))
-                .map(notification -> NotificationDetailsDto.builder()
-                        .id(notification.getId())
-                        .vehicleId(notification.getVehicle().getId())
-                        .regNo(notification.getVehicle().getRegNumber())
-                        .missingDetailsId(notification.getMissingDetails().getId())
-                        .notifiedByUserId(notification.getNotifiedBy().getId())
-                        .vehicleOwnerUserId(notification.getVehicleOwner().getId())
-                        .seenAt(notification.getSeenAt())
-                        .seenArea(notification.getSeenArea())
-                        .liveMapLink(notification.getLiveMapLink())
-                        .message(notification.getMessage())
-                        .seenByVehicleOwner(notification.getSeenByVehicleOwner())
-                        .build());
+                .map(this::toNotificationDetailsDto);
+    }
+
+    @Override
+    @Transactional
+    public NotificationDetailsDto updateSeenStatusForCurrentUser(Long notificationId, String seen) {
+        Long currentUserId = multiFunctionUtility.getCurrentUser().getId();
+        Notification notification = notificationRepository
+                .findByIdAndVehicleOwner_Id(notificationId, currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Notification not found with id: " + notificationId));
+
+        notification.setSeenByVehicleOwner(seen);
+        return toNotificationDetailsDto(notificationRepository.save(notification));
+    }
+
+    private NotificationDetailsDto toNotificationDetailsDto(Notification notification) {
+        return NotificationDetailsDto.builder()
+                .id(notification.getId())
+                .vehicleId(notification.getVehicle().getId())
+                .regNo(notification.getVehicle().getRegNumber())
+                .missingDetailsId(notification.getMissingDetails().getId())
+                .notifiedByUserId(notification.getNotifiedBy().getId())
+                .vehicleOwnerUserId(notification.getVehicleOwner().getId())
+                .seenAt(notification.getSeenAt())
+                .seenArea(notification.getSeenArea())
+                .liveMapLink(notification.getLiveMapLink())
+                .message(notification.getMessage())
+                .seenByVehicleOwner(notification.getSeenByVehicleOwner())
+                .build();
     }
 }
