@@ -31,4 +31,6 @@ public class MissingDetailsDetailsDto {
     private String description;
     private VehicleStatus vehicleStatus;
     private String reward;
+    private boolean ownReport;
+    private boolean found;
 }

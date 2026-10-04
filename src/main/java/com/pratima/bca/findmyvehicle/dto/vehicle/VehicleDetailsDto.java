@@ -29,6 +29,8 @@ public class VehicleDetailsDto {
     private VehicleCompany vehicleCompany;
     private VehicleStatus vehicleStatus;
     private String vehicleModel;
+    private boolean ownVehicle;
+    private boolean found;
     private List<String> imageUrls;
     private List<MissingDetailsDetailsDto> missingDetails;
 }

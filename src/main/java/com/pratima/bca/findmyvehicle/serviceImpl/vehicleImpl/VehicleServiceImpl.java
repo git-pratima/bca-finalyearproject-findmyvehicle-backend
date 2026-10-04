@@ -9,6 +9,7 @@ import com.pratima.bca.findmyvehicle.entity.vehicle.VehicleImage;
 import com.pratima.bca.findmyvehicle.enums.VehicleStatus;
 import com.pratima.bca.findmyvehicle.exception.ResourceNotFoundException;
 import com.pratima.bca.findmyvehicle.repository.vehicle.VehicleRepository;
+import com.pratima.bca.findmyvehicle.repository.vehicle.MissingDetailsRepository;
 import com.pratima.bca.findmyvehicle.service.vehicle.VehicleService;
 import com.pratima.bca.findmyvehicle.util.ImageService;
 import com.pratima.bca.findmyvehicle.util.MultiFunctionUtility;
@@ -25,15 +26,22 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.time.LocalDate;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 public class VehicleServiceImpl implements VehicleService {
 
     @Autowired
     private VehicleRepository vehicleRepository;
+
+    @Autowired
+    private MissingDetailsRepository missingDetailsRepository;
 
     @Autowired
     private ModelMapper mapper;
@@ -55,6 +63,26 @@ public class VehicleServiceImpl implements VehicleService {
         Vehicle vehicle = vehicleRepository.findByRegNumberIgnoreCase(regNumber.trim())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Vehicle not found for registration number: " + regNumber));
+
+        return toVehicleDetailsDto(vehicle);
+    }
+
+    @Override
+    @Transactional
+    public VehicleDetailsDto markMissingReportAsFound(Long missingDetailsId) {
+        MissingDetails missingDetails = missingDetailsRepository.findById(missingDetailsId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Missing report not found with id: " + missingDetailsId));
+
+        if (missingDetails.getVehicleStatus() != VehicleStatus.FOUND) {
+            missingDetails.setVehicleStatus(VehicleStatus.FOUND);
+            missingDetails.setFoundDate(LocalDate.now());
+        }
+
+        Vehicle vehicle = missingDetails.getVehicle();
+        vehicle.setVehicleStatus(VehicleStatus.FOUND);
+        vehicleRepository.save(vehicle);
+        missingDetailsRepository.save(missingDetails);
 
         return toVehicleDetailsDto(vehicle);
     }
@@ -167,6 +195,7 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     private VehicleDetailsDto toVehicleDetailsDto(Vehicle vehicle) {
+        String currentUserEmail = getCurrentUserEmail();
         return VehicleDetailsDto.builder()
                 .id(vehicle.getId())
                 .regNumber(vehicle.getRegNumber())
@@ -180,6 +209,10 @@ public class VehicleServiceImpl implements VehicleService {
                 .vehicleCompany(vehicle.getVehicleCompany())
                 .vehicleStatus(vehicle.getVehicleStatus())
                 .vehicleModel(vehicle.getVehicleModel())
+                .found(vehicle.getVehicleStatus() == VehicleStatus.FOUND)
+                .ownVehicle(isCurrentUser(
+                        vehicle.getReportedBy() != null ? vehicle.getReportedBy().getEmail() : null,
+                        currentUserEmail))
                 .imageUrls(vehicle.getImages().stream()
                         .map(VehicleImage::getImageUrl)
                         .toList())
@@ -198,9 +231,27 @@ public class VehicleServiceImpl implements VehicleService {
                                 .description(details.getDescription())
                                 .vehicleStatus(details.getVehicleStatus())
                                 .reward(details.getReward())
+                                .found(details.getVehicleStatus() == VehicleStatus.FOUND)
+                                .ownReport(isCurrentUser(details.getCreatedBy(), currentUserEmail))
                                 .build())
                         .toList())
                 .build();
+    }
+
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
+            return null;
+        }
+
+        String email = authentication.getName();
+        return email == null || email.isBlank() ? null : email.trim();
+    }
+
+    private boolean isCurrentUser(String userEmail, String currentUserEmail) {
+        return userEmail != null && currentUserEmail != null
+                && userEmail.trim().equalsIgnoreCase(currentUserEmail);
     }
 
     @Override

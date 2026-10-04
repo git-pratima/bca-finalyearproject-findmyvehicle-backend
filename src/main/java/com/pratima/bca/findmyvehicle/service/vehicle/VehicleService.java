@@ -18,6 +18,8 @@ public interface VehicleService {
 
     VehicleDetailsDto getVehicleDetails(String regNumber);
 
+    VehicleDetailsDto markMissingReportAsFound(Long missingDetailsId);
+
     Page<VehicleDetailsDto> getVehiclesReportedByCurrentUser(
             String regNumber, String model, String city, String pinCode, int page, int size);
 

@@ -68,7 +68,7 @@ public class MailService {
             try{
                 sendEmail1(to, subject, body);
             } catch (Exception e) {
-                
+
             }
         }
     }
