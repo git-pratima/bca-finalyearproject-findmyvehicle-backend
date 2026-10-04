@@ -6,8 +6,10 @@ import com.pratima.bca.findmyvehicle.entity.vehicle.MissingDetails;
 import com.pratima.bca.findmyvehicle.entity.vehicle.Vehicle;
 import com.pratima.bca.findmyvehicle.entity.vehicle.VehicleImage;
 import com.pratima.bca.findmyvehicle.enums.VehicleStatus;
+import com.pratima.bca.findmyvehicle.repository.vehicle.MissingDetailsRepository;
 import com.pratima.bca.findmyvehicle.repository.vehicle.VehicleRepository;
 import com.pratima.bca.findmyvehicle.service.dashboard.DashboardService;
+import com.pratima.bca.findmyvehicle.service.notification.NotificationService;
 import com.pratima.bca.findmyvehicle.util.MultiFunctionUtility;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,13 +24,19 @@ import java.util.Objects;
 public class DashboardServiceImpl implements DashboardService {
 
     private final VehicleRepository vehicleRepository;
+    private final MissingDetailsRepository missingDetailsRepository;
+    private final NotificationService notificationService;
     private final MultiFunctionUtility multiFunctionUtility;
     private final int recentMissingVehiclesLimit;
 
     public DashboardServiceImpl(VehicleRepository vehicleRepository,
+                                MissingDetailsRepository missingDetailsRepository,
+                                NotificationService notificationService,
                                 MultiFunctionUtility multiFunctionUtility,
                                 @Value("${app.dashboard.recent-missing-vehicles-limit}") int recentMissingVehiclesLimit) {
         this.vehicleRepository = vehicleRepository;
+        this.missingDetailsRepository = missingDetailsRepository;
+        this.notificationService = notificationService;
         this.multiFunctionUtility = multiFunctionUtility;
         this.recentMissingVehiclesLimit = recentMissingVehiclesLimit;
     }
@@ -38,10 +46,10 @@ public class DashboardServiceImpl implements DashboardService {
     public DashboardData getDashboardData() {
         User user = multiFunctionUtility.getCurrentUser();
         DashboardData.DashboardSummary summary = new DashboardData.DashboardSummary(
-                vehicleRepository.count(),
-                vehicleRepository.countVehiclesByMissingDetailsStatus(VehicleStatus.FOUND),
-                vehicleRepository.countVehiclesByMissingDetailsStatus(VehicleStatus.MISSING),
-                vehicleRepository.countVehiclesByMissingDetailsStatus(VehicleStatus.CLOSED));
+                missingDetailsRepository.count(),
+                missingDetailsRepository.countByVehicleStatus(VehicleStatus.FOUND),
+                missingDetailsRepository.countByVehicleStatus(VehicleStatus.MISSING),
+                vehicleRepository.count());
 
         List<DashboardData.DashboardVehicle> recentVehicles = vehicleRepository
                 .findDistinctByMissingDetails_VehicleStatusOrderByCreatedDateDesc(
@@ -55,6 +63,7 @@ public class DashboardServiceImpl implements DashboardService {
                         user.getId(), user.getName(), user.getEmail(), user.getProfilePic()),
                 summary,
                 new DashboardData.DashboardActivity(null, null),
+                notificationService.getUnreadNotificationCountForCurrentUser(),
                 recentVehicles);
     }
 

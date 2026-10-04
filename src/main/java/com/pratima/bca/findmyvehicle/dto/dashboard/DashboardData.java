@@ -6,11 +6,13 @@ public record DashboardData(
         DashboardUser user,
         DashboardSummary summary,
         DashboardActivity activity,
+        long unreadNotificationCount,
         List<DashboardVehicle> recentMissingVehicles) {
 
     public record DashboardUser(Long id, String name, String email, String profileImageUrl) {}
 
-    public record DashboardSummary(long totalReports, long recovered, long inProgress, long closed) {}
+    public record DashboardSummary(
+            long totalReports, long recovered, long inProgress, long totalRegisteredVehicles) {}
 
     public record DashboardActivity(Integer unreadNotifications, Integer unreadMessages) {}
 

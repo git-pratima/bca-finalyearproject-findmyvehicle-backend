@@ -78,4 +78,11 @@ public class NotificationServiceImpl implements NotificationService {
                 .seenByVehicleOwner(saved.getSeenByVehicleOwner())
                 .build();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getUnreadNotificationCountForCurrentUser() {
+        Long currentUserId = multiFunctionUtility.getCurrentUser().getId();
+        return notificationRepository.countByVehicleOwner_IdAndSeenByVehicleOwner(currentUserId, "N");
+    }
 }

@@ -8,4 +8,6 @@ import org.springframework.stereotype.Service;
 public interface NotificationService {
 
     NotificationDetailsDto createNotification(CreateNotificationRequest request);
+
+    long getUnreadNotificationCountForCurrentUser();
 }
