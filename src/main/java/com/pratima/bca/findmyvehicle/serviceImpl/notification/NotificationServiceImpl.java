@@ -13,6 +13,8 @@ import com.pratima.bca.findmyvehicle.repository.vehicle.VehicleRepository;
 import com.pratima.bca.findmyvehicle.service.notification.NotificationService;
 import com.pratima.bca.findmyvehicle.util.MultiFunctionUtility;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,6 +70,7 @@ public class NotificationServiceImpl implements NotificationService {
         return NotificationDetailsDto.builder()
                 .id(saved.getId())
                 .vehicleId(vehicle.getId())
+                .regNo(vehicle.getRegNumber())
                 .missingDetailsId(missingDetails.getId())
                 .notifiedByUserId(currentUser.getId())
                 .vehicleOwnerUserId(vehicle.getReportedBy().getId())
@@ -84,5 +87,26 @@ public class NotificationServiceImpl implements NotificationService {
     public long getUnreadNotificationCountForCurrentUser() {
         Long currentUserId = multiFunctionUtility.getCurrentUser().getId();
         return notificationRepository.countByVehicleOwner_IdAndSeenByVehicleOwner(currentUserId, "N");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<NotificationDetailsDto> getNotificationsForCurrentUser(int page, int size) {
+        Long currentUserId = multiFunctionUtility.getCurrentUser().getId();
+        return notificationRepository.findByVehicleOwner_IdOrderByCreatedDateDesc(
+                        currentUserId, PageRequest.of(page, size))
+                .map(notification -> NotificationDetailsDto.builder()
+                        .id(notification.getId())
+                        .vehicleId(notification.getVehicle().getId())
+                        .regNo(notification.getVehicle().getRegNumber())
+                        .missingDetailsId(notification.getMissingDetails().getId())
+                        .notifiedByUserId(notification.getNotifiedBy().getId())
+                        .vehicleOwnerUserId(notification.getVehicleOwner().getId())
+                        .seenAt(notification.getSeenAt())
+                        .seenArea(notification.getSeenArea())
+                        .liveMapLink(notification.getLiveMapLink())
+                        .message(notification.getMessage())
+                        .seenByVehicleOwner(notification.getSeenByVehicleOwner())
+                        .build());
     }
 }

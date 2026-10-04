@@ -10,6 +10,7 @@ import java.util.Date;
 public class NotificationDetailsDto {
     private Long id;
     private Long vehicleId;
+    private String regNo;
     private Long missingDetailsId;
     private Long notifiedByUserId;
     private Long vehicleOwnerUserId;
