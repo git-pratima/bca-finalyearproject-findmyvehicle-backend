@@ -62,6 +62,35 @@ public class ImageService {
         return imageUrls;
     }
 
+    public String uploadNotificationImage(String regNumber, Long notificationId, MultipartFile imageFile) {
+        if (regNumber == null || regNumber.isBlank()) {
+            throw new IllegalArgumentException("Vehicle registration number is required");
+        }
+        if (notificationId == null) {
+            throw new IllegalArgumentException("Notification ID is required");
+        }
+        if (imageFile == null || imageFile.isEmpty()) {
+            return null;
+        }
+
+        String safeRegNumber = regNumber.trim().replaceAll("[^A-Za-z0-9_-]", "_");
+        Map<String, Object> uploadOptions = new HashMap<>();
+        uploadOptions.put("folder", imageFolder + "/" + safeRegNumber + "/notifications");
+        uploadOptions.put("public_id", "notification-" + notificationId);
+        uploadOptions.put("resource_type", "image");
+
+        try {
+            Map<?, ?> uploadResult = cloudinary.uploader().upload(imageFile.getBytes(), uploadOptions);
+            Object secureUrl = uploadResult.get("secure_url");
+            if (!(secureUrl instanceof String)) {
+                throw new IllegalStateException("Cloudinary did not return a secure notification image URL");
+            }
+            return (String) secureUrl;
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to upload notification image to Cloudinary", exception);
+        }
+    }
+
     public String uploadProfileImage(Long userId, MultipartFile imageFile) {
         if (userId == null) {
             throw new IllegalArgumentException("User ID is required to upload a profile image");

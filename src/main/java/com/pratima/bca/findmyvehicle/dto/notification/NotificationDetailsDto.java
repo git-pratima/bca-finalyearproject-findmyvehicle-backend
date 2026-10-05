@@ -19,4 +19,5 @@ public class NotificationDetailsDto {
     private String liveMapLink;
     private String message;
     private String seenByVehicleOwner;
+    private String imageUrl;
 }

@@ -3,6 +3,7 @@ package com.pratima.bca.findmyvehicle.entity.notification;
 import com.pratima.bca.findmyvehicle.entity.User;
 import com.pratima.bca.findmyvehicle.entity.vehicle.MissingDetails;
 import com.pratima.bca.findmyvehicle.entity.vehicle.Vehicle;
+import com.pratima.bca.findmyvehicle.entity.vehicle.VehicleImage;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -10,6 +11,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "tbl_notification")
@@ -53,6 +56,10 @@ public class Notification {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_owner_user_id", nullable = false)
     private User vehicleOwner;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<VehicleImage> images = new ArrayList<>();
 
     @Column(name="CREATED_DATE")
     @Temporal(TemporalType.TIMESTAMP)

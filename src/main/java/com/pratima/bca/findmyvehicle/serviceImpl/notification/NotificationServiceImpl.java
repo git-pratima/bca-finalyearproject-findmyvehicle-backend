@@ -6,17 +6,22 @@ import com.pratima.bca.findmyvehicle.entity.notification.Notification;
 import com.pratima.bca.findmyvehicle.entity.User;
 import com.pratima.bca.findmyvehicle.entity.vehicle.MissingDetails;
 import com.pratima.bca.findmyvehicle.entity.vehicle.Vehicle;
+import com.pratima.bca.findmyvehicle.entity.vehicle.VehicleImage;
 import com.pratima.bca.findmyvehicle.exception.ResourceNotFoundException;
 import com.pratima.bca.findmyvehicle.repository.notification.NotificationRepository;
 import com.pratima.bca.findmyvehicle.repository.vehicle.MissingDetailsRepository;
 import com.pratima.bca.findmyvehicle.repository.vehicle.VehicleRepository;
 import com.pratima.bca.findmyvehicle.service.notification.NotificationService;
 import com.pratima.bca.findmyvehicle.util.MultiFunctionUtility;
+import com.pratima.bca.findmyvehicle.util.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
@@ -33,9 +38,18 @@ public class NotificationServiceImpl implements NotificationService {
     @Autowired
     private MultiFunctionUtility multiFunctionUtility;
 
+    @Autowired
+    private ImageService imageService;
+
     @Override
     @Transactional
     public NotificationDetailsDto createNotification(CreateNotificationRequest request) {
+        return createNotification(request, null);
+    }
+
+    @Override
+    @Transactional
+    public NotificationDetailsDto createNotification(CreateNotificationRequest request, MultipartFile imageFile) {
         String regNo = request.getRegNo().trim();
         Vehicle vehicle = vehicleRepository.findByRegNumberIgnoreCase(regNo)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -64,22 +78,20 @@ public class NotificationServiceImpl implements NotificationService {
                 .message(request.getMessage())
                 .seenByVehicleOwner(seenByVehicleOwner == null || seenByVehicleOwner.isBlank()
                         ? "N" : seenByVehicleOwner)
+                .images(new ArrayList<>())
                 .build();
 
         Notification saved = notificationRepository.save(notification);
-        return NotificationDetailsDto.builder()
-                .id(saved.getId())
-                .vehicleId(vehicle.getId())
-                .regNo(vehicle.getRegNumber())
-                .missingDetailsId(missingDetails.getId())
-                .notifiedByUserId(currentUser.getId())
-                .vehicleOwnerUserId(vehicle.getReportedBy().getId())
-                .seenAt(saved.getSeenAt())
-                .seenArea(saved.getSeenArea())
-                .liveMapLink(saved.getLiveMapLink())
-                .message(saved.getMessage())
-                .seenByVehicleOwner(saved.getSeenByVehicleOwner())
-                .build();
+        String imageUrl = imageService.uploadNotificationImage(regNo, saved.getId(), imageFile);
+        if (imageUrl != null) {
+            VehicleImage image = VehicleImage.builder()
+                    .notification(saved)
+                    .imageUrl(imageUrl)
+                    .build();
+            saved.getImages().add(image);
+            saved = notificationRepository.save(saved);
+        }
+        return toNotificationDetailsDto(saved);
     }
 
     @Override
@@ -124,6 +136,10 @@ public class NotificationServiceImpl implements NotificationService {
                 .liveMapLink(notification.getLiveMapLink())
                 .message(notification.getMessage())
                 .seenByVehicleOwner(notification.getSeenByVehicleOwner())
+                .imageUrl(notification.getImages().stream()
+                        .findFirst()
+                        .map(VehicleImage::getImageUrl)
+                        .orElse(null))
                 .build();
     }
 }

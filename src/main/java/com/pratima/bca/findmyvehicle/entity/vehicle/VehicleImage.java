@@ -1,6 +1,7 @@
 package com.pratima.bca.findmyvehicle.entity.vehicle;
 
 import jakarta.persistence.*;
+import com.pratima.bca.findmyvehicle.entity.notification.Notification;
 import lombok.*;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,8 +26,12 @@ public class VehicleImage {
     private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehicle_id", nullable = false)
+    @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "notification_id")
+    private Notification notification;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdDate;
