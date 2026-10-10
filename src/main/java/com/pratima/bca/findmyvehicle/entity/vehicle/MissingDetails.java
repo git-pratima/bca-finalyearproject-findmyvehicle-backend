@@ -1,6 +1,7 @@
 package com.pratima.bca.findmyvehicle.entity.vehicle;
 
 import com.pratima.bca.findmyvehicle.entity.notification.Notification;
+import com.pratima.bca.findmyvehicle.entity.feedback.Feedback;
 import com.pratima.bca.findmyvehicle.enums.Country;
 import com.pratima.bca.findmyvehicle.enums.State;
 import com.pratima.bca.findmyvehicle.enums.VehicleStatus;
@@ -72,6 +73,10 @@ public class MissingDetails {
     @OneToMany(mappedBy = "missingDetails", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Notification> notifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "missingDetails", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Feedback> feedbacks = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name="VEHICLE_STATUS")

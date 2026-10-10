@@ -1,5 +1,6 @@
 package com.pratima.bca.findmyvehicle.entity.feedback;
 
+import com.pratima.bca.findmyvehicle.entity.vehicle.MissingDetails;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -26,6 +27,10 @@ public class Feedback {
 
     @Column(name="COMMENTS", length = 3000)
     private String comments;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "missing_details_id", nullable = false)
+    private MissingDetails missingDetails;
 
     @Column(name="CREATED_DATE")
     @Temporal(TemporalType.TIMESTAMP)
